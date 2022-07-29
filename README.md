@@ -13,6 +13,10 @@ On Mac and Linux, run `nrnivmodl`
 
 Alternatively, open the NEURON Application folder (or program folder from the Start menu on Windows) and launch the mknrndll tool. When the gui appears, select the folder containing the code for Kuznetsova et al 2010. Then click the button to make nrnmech.dll.
 
-After the mechanisms are successfully compiled, run `main.py` to receive a prompt asking which figure you would like to view.
+After the mechanisms are successfully compiled, run `main.py` to receive a prompt asking which figure you would like to view. Answer the prompt with an input such as `2a2` or `6`. You will need to wait several minutes for the simulation to run and then generate the figure.
 
-You can also call the figure files directly (ex: `python Fig2a2.py`)
+You can continue to plot as many figures as you want before answering the prompt with `q` or `quit`.
+
+The control trace (Figure 2a2) is slightly different than the screen shot provided in the original model repository. However, so is the hoc version when I run it; perhaps the authors made a change to their model after preparing the publication figures and before uploading to ModelDB.
+
+
