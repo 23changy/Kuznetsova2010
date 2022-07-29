@@ -9,6 +9,7 @@ the simulator.  These library functions are used to initialize the
 simulator, begin and end simulations, and plot variables during a
 simulation. """
 
+import matplotlib.pyplot as plt
 from neuron import h
 h.load_file("stdlib.hoc")
 h.load_file("nrngui.hoc")
@@ -48,8 +49,14 @@ nainit=  4.075
 vsolder=h.v_init
 vsold=h.v_init
 
-# PARAMETERS
+# PARAMETERS - adjusted per figure
 na_cond =  550.0e-6 
+kca_cond = 59.0e-6
+iapl = 0 # in nA, -0.180nA=-180pA
+idelay = 4000
+idur = 1000
+
+# PARAMETERS
 kdr_cond = 665.0e-6
 ca_cond = 11.196e-6
 kca_cond = 59.0e-6
@@ -57,7 +64,6 @@ a_cond_s = 570.0e-6
 a_cond_p = 285.0e-6
 a_cond_d = 266.0e-6
 # stronger gA *1.28 =  729.6, 364.8, 340.48
-iapl = 0.1 # in nA, -0.180nA=-180pA
 
 h("global_ra = 40")
 h("forall Ra = global_ra")
@@ -73,9 +79,11 @@ h('forall ion_style("na_ion", 2,2,0,0,0)')
 h("objref cvode")
 h("cvode = new CVode(0)") #  0 for clamp
 h("x= cvode.active(0)")
-# stimobj = None
+
+stimobj = h.MyIClamp(h.soma[0](0.5))
+
 def init_cell():
-    global g_celsius #, stimobj
+    global g_celsius, stimobj
     # First set all of the dimensions and 
     # insert the channels into each section
     
@@ -101,9 +109,8 @@ def init_cell():
             seg.kca.gkbar = kca_cond
     
        
-    stimobj = h.MyIClamp(h.soma[0](0.5))
-    stimobj.delay = 2500 # ms, time after start of sim when you want the current injection to begin
-    stimobj.dur = 2500 # ms, duration of current pulse
+    stimobj.delay = idelay # ms, time after start of sim when you want the current injection to begin
+    stimobj.dur = idur # ms, duration of current pulse
     stimobj.amp = 0 # nA, contains the level of current being injected at any given time during simulation   
     stimobj.amp2 = iapl # nA, contains the level of current being injected at any given time during simulation   
     # in nA, -0.180nA=-180pA
@@ -158,25 +165,66 @@ def init_cell():
     g_celsius = 35
 
 
+def updatecell():
+    global g_celsius, stimobj
+    # First set all of the dimensions and 
+    # insert the channels into each section
+    
+    
+    for sec in h.soma:
+    	for seg in sec:
+            seg.hh3.gnabar = na_cond
+            seg.hh3.gkhhbar = kdr_cond
+            seg.hh3.gkabar = a_cond_s
+            seg.hh3.qv = 56.0
+            seg.hh3.qs = 8.0
+    
+            seg.cachan.gcalbar = ca_cond
+            #seg.cachan.gkbar = 0.0
+    
+            seg.kca.gkbar = kca_cond
+    
+       
+    stimobj.delay = 2500 # ms, time after start of sim when you want the current injection to begin
+    stimobj.dur = 2500 # ms, duration of current pulse
+    stimobj.amp = 0 # nA, contains the level of current being injected at any given time during simulation   
+    stimobj.amp2 = iapl # nA, contains the level of current being injected at any given time during simulation   
+    # in nA, -0.180nA=-180pA
+    
+    
+    for sec in h.proxDend:
+    	for seg in sec:
+            seg.hh3.gnabar = na_cond
+            seg.hh3.gkhhbar = kdr_cond
+            seg.hh3.gkabar = a_cond_p
+            seg.hh3.qv = 60.0
+            seg.hh3.qs = 5.0
+    
+            seg.cachan.gcalbar = ca_cond
+            # seg.cachan.gkbar = 0.0
+    
+            seg.kca.gkbar = kca_cond
+    
+    
+    for sec in h.distDend:    
+    	for seg in sec:
+            seg.hh3.gnabar = na_cond
+            seg.hh3.gkhhbar = kdr_cond
+            seg.hh3.gkabar = a_cond_d
+            seg.hh3.qv = 60.0
+            seg.hh3.qs = 5.0
+    
+            seg.cachan.gcalbar = ca_cond
+            # seg.cachan.gkbar = 0.0
+    
+            seg.kca.gkbar = kca_cond
+    
+    
 
-h("tot=0")
-h("forall {tot=tot+nseg}")
-print("segments before ", h.tot)
-h("nseg=1")
+    h("forall cm = global_cm")
+    h("forall Ra = global_ra")
+    g_celsius = 35
 
-#  Increase number of segments
-h.geom_nseg()
-
-h.tot=0
-h("forall {tot=tot+nseg}")
-print("segments after ", h.tot)
-
-init_cell()	# Call the function to initialize our cell. 
-
-h("objref ss,f1,f2")
-h("ss = new SaveState()")
-h("f1 = new File()")
-h("f2 = new File()")
 
 def init():
     
@@ -201,74 +249,103 @@ def init():
         
         h.t=h.tstart
 
+
+def runandplot():
+    if back == 1:
+        # if(!clamp ||verbose) {print t/1000,soma[1].v(0.5),soma[1].nai(0.5),soma[1].cai(0.5),dend[3].v(0.5),dend[3].cai(0.5),dend[17].v(0.5),dend[17].cai(0.5)}
+        # if(clamp && !vcseries && !verbose) print t/1000,vc.i,soma.cai(0.5),soma.v(0.5)
+        j = 10 if vcseries == 1 else 0
         
-init()
-
-
-if back == 1:
-    # if(!clamp ||verbose) {print t/1000,soma[1].v(0.5),soma[1].nai(0.5),soma[1].cai(0.5),dend[3].v(0.5),dend[3].cai(0.5),dend[17].v(0.5),dend[17].cai(0.5)}
-    # if(clamp && !vcseries && !verbose) print t/1000,vc.i,soma.cai(0.5),soma.v(0.5)
-    j = 10 if vcseries == 1 else 0
     
-
-    if vcseries == 1:
-        for i in range(j+1):
-            h.vc.amp1 = h.vc.amp1 + 10      
-        init()
-        
-    h("next = t + Dt")
-    h("flag1=0")
-    h("flag2=0")
-    h("hold = 0")
-    while h.t<h.tstop:
-        h("vsolder=vsold")
-        h("vsold=soma.v(0.5)")
-        
-        h.fadvance()
-        if clamp == 0 or verbose == 1:
-
-            if ((h.vsolder<h.vsold and h.soma[0].v(0.5) < h.vsold)
-                or (h.vsolder>h.vsold and h.soma[0].v(0.5)>h.vsold)):
-                h("vsolder=soma.v(0.5)")
-                # print t/1000,soma[1].v(0.5),soma[1].nai(0.5),soma[1].cai(0.5),dend[3].v(0.5),dend[3].cai(0.5),dend[17].v(0.5),dend[17].cai(0.5)
-                h("next = t + Dt")
-                h("flag2=1")
-                h("hold=dt")
-                h("soma.v(0.5)=vsolder")
+        if vcseries == 1:
+            for i in range(j+1):
+                h.vc.amp1 = h.vc.amp1 + 10      
+            init()
             
-
-        if h.t>=h.next:
-            Dt = 100*dt
-            if h.Dt>h.Dtmax:
-                h.Dt = h.Dtmax
-            if h.Dt<.1:
-                h.Dt = .1
-            h.next = h.t + h.Dt
-            # if(!clamp||verbose) {print t/1000,soma[1].v(0.5),soma[1].nai(0.5),soma[1].cai(0.5),dend[3].v(0.5),dend[3].cai(0.5),dend[17].v(0.5),dend[17].cai(0.5)}
-            # if(clamp && !vcseries && !verbose) print t/1000,vc.i,soma.cai(0.5),soma.v(0.5)
-
-
+        h("next = t + Dt")
+        h("flag1=0")
+        h("flag2=0")
+        h("hold = 0")
+        while h.t<h.tstop:
+            h("vsolder=vsold")
+            h("vsold=soma.v(0.5)")
+            
+            h.fadvance()
+            if clamp == 0 or verbose == 1:
     
-    # print t/1000,soma[1].v(0.5),soma[1].nai(0.5),soma[1].cai(0.5),dend[3].v(0.5),dend[3].cai(0.5),dend[17].v(0.5),dend[17].cai(0.5)
-    # ifvcseries) print vc.amp1,vc.i
-    h('f2.wopen("state.new")')
-    h('ss.save()')
-    h('ss.fwrite(f2)')
-    h('f2.close')
+                if ((h.vsolder<h.vsold and h.soma[0].v(0.5) < h.vsold)
+                    or (h.vsolder>h.vsold and h.soma[0].v(0.5)>h.vsold)):
+                    h("vsolder=soma.v(0.5)")
+                    # print t/1000,soma[1].v(0.5),soma[1].nai(0.5),soma[1].cai(0.5),dend[3].v(0.5),dend[3].cai(0.5),dend[17].v(0.5),dend[17].cai(0.5)
+                    h("next = t + Dt")
+                    h("flag2=1")
+                    h("hold=dt")
+                    h("soma.v(0.5)=vsolder")
+                
     
-else:
-    h("forall Ra = global_ra")
-    h("forall cm = global_cm")
-    h.celsius = g_celsius
+            if h.t>=h.next:
+                Dt = 100*dt
+                if h.Dt>h.Dtmax:
+                    h.Dt = h.Dtmax
+                if h.Dt<.1:
+                    h.Dt = .1
+                h.next = h.t + h.Dt
+                # if(!clamp||verbose) {print t/1000,soma[1].v(0.5),soma[1].nai(0.5),soma[1].cai(0.5),dend[3].v(0.5),dend[3].cai(0.5),dend[17].v(0.5),dend[17].cai(0.5)}
+                # if(clamp && !vcseries && !verbose) print t/1000,vc.i,soma.cai(0.5),soma.v(0.5)
+    
+    
+        
+        # print t/1000,soma[1].v(0.5),soma[1].nai(0.5),soma[1].cai(0.5),dend[3].v(0.5),dend[3].cai(0.5),dend[17].v(0.5),dend[17].cai(0.5)
+        # ifvcseries) print vc.amp1,vc.i
+        h('f2.wopen("state.new")')
+        h('ss.save()')
+        h('ss.fwrite(f2)')
+        h('f2.close')
+        
+    else:
+        h("forall Ra = global_ra")
+        h("forall cm = global_cm")
+        h.celsius = g_celsius
+    
+    vvec = h.Vector().record(h.soma[0](0.5)._ref_v)
+    tvec = h.Vector().record(h._ref_t)
+    # ivec = h.Vector().record(stimobj._ref_i)
+    h.tstop = 5000
+    h.run()
+    
+    fig1 = plt.figure()
+    plt.plot(tvec, vvec, linewidth=2, label=str("soma[0](0.5) voltage"))
+    plt.ylim([-80, 0])
+    plt.xlim([1500, 3500])
 
-vvec = h.Vector().record(h.soma[0](0.5)._ref_v)
-tvec = h.Vector().record(h._ref_t)
-# ivec = h.Vector().record(stimobj._ref_i)
-h.tstop = 5000
-h.run()
 
-import matplotlib.pyplot as plt
-fig1 = plt.figure()
-plt.plot(tvec, vvec, linewidth=2, label=str("soma[0](0.5) voltage"))
-plt.ylim([-80, 0])
-plt.xlim([1500, 3500])
+h("tot=0")
+h("forall {tot=tot+nseg}")
+print("segments before ", h.tot)
+h("nseg=1")
+
+#  Increase number of segments
+h.geom_nseg()
+
+h.tot=0
+h("forall {tot=tot+nseg}")
+print("segments after ", h.tot)
+
+init_cell()	# Call the function to initialize our cell. 
+
+# PARAMETERS adjusted
+na_cond =  550.0e-6 
+kca_cond = 59.0e-6
+iapl = 0.1 # in nA, -0.180nA=-180pA
+idelay = 2500
+idur = 2500
+
+updatecell()
+
+h("objref ss,f1,f2")
+h("ss = new SaveState()")
+h("f1 = new File()")
+h("f2 = new File()")
+
+init()
+runandplot()

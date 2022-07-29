@@ -73,9 +73,9 @@ h('forall ion_style("na_ion", 2,2,0,0,0)')
 h("objref cvode")
 h("cvode = new CVode(0)") #  0 for clamp
 h("x= cvode.active(0)")
-# stimobj = None
+stimobj = None
 def init_cell():
-    global g_celsius #, stimobj
+    global g_celsius, stimobj
     # First set all of the dimensions and 
     # insert the channels into each section
     

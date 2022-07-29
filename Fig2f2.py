@@ -74,8 +74,9 @@ h("objref cvode")
 h("cvode = new CVode(1)") #  0 for clamp
 h("x= cvode.active(1)")
 
+stimobj = None
 def init_cell():
-    global g_celsius
+    global g_celsius, stimobj
     # First set all of the dimensions and 
     # insert the channels into each section
     
