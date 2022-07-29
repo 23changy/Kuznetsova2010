@@ -11,7 +11,7 @@ INDEPENDENT {t FROM 0 TO 1 WITH 1 (ms)}
 
 NEURON {
 	POINT_PROCESS MyIClamp
-	RANGE del,dur,amp,amp2,i
+	RANGE delay,dur,amp,amp2,i
 	ELECTRODE_CURRENT i
 }
 UNITS {
@@ -19,7 +19,7 @@ UNITS {
 }
 
 PARAMETER {
-	del  (ms)
+	delay  (ms)
 	dur  (ms)	<0,1e9>
 	amp  (nA)
 	amp2 (nA)
@@ -31,10 +31,10 @@ INITIAL {
 }
 
 BREAKPOINT {
-	at_time(del)
-	at_time(del+dur)
+	at_time(delay)
+	at_time(delay+dur)
 
-	if (t < del + dur && t > del) {
+	if (t < delay + dur && t > delay) {
 		i = amp +amp2
 	}else{
 		i = amp

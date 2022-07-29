@@ -86,7 +86,7 @@ forsec  "soma"{
 
 soma {
         stim = new MyIClamp(.5)
-        {stim.del = 4000 stim.dur = 1000.0 stim.amp = 0.00  /*in nA, -0.180nA=-180pA*/
+        {stim.delay = 4000 stim.dur = 1000.0 stim.amp = 0.00  /*in nA, -0.180nA=-180pA*/
          stim.amp2 = iapl}
 }
 

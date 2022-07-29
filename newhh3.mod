@@ -14,7 +14,7 @@ NEURON {
         SUFFIX hh3
         USEION na READ nai WRITE ina
         USEION k WRITE ik
-        RANGE  gnabar,gkhhbar,gkabar,ina,ikhh,ika,ik,ena,niv,miv,hiv,htv1,htv2 
+        RANGE  gnabar,gkhhbar,gkabar,ina,ikhh,ika,ik,ena,niv,miv,hiv,htv1,htv2,qv,qs
         GLOBAL minf,hinf,ninf
 }
  
